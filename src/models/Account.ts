@@ -12,7 +12,7 @@ import type { Transaction } from "./Transaction.ts";
 export class Account extends Model<InferAttributes<Account, { omit:  "createdAt" | "updatedAt" }>, InferCreationAttributes<Account, { omit:  "createdAt" | "updatedAt"}>> {
   declare id: CreationOptional<string>;
   declare userId: string;
-  declare currency: string;
+  declare currency: string; // pg-node returns decimal as string
   declare balance: CreationOptional<string>;
   declare readonly createdAt: CreationOptional<Date>;
   declare readonly updatedAt: CreationOptional<Date>;
