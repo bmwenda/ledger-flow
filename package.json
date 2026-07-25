@@ -19,6 +19,7 @@
     "db:seed:undo": "sequelize-cli db:seed:undo:all"
   },
   "dependencies": {
+    "decimal.js": "^10.6.0",
     "express": "^5.2.1",
     "pg": "^8.22.0",
     "sequelize": "^6.37.8"

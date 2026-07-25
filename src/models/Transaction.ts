@@ -14,7 +14,7 @@ export type TransactionStatus = (typeof TRANSACTION_STATUSES)[number];
 
 export class Transaction extends Model<InferAttributes<Transaction, { omit:  "createdAt" | "updatedAt" }>, InferCreationAttributes<Transaction, { omit:  "createdAt" | "updatedAt"}>> {
   declare id: CreationOptional<string>;
-  declare amount: number;
+  declare amount: string;
   declare fromAccountId: string;
   declare toAccountId: string;
   declare status: CreationOptional<TransactionStatus>;

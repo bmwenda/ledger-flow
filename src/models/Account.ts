@@ -13,7 +13,7 @@ export class Account extends Model<InferAttributes<Account, { omit:  "createdAt"
   declare id: CreationOptional<string>;
   declare userId: string;
   declare currency: string;
-  declare balance: CreationOptional<number>;
+  declare balance: CreationOptional<string>;
   declare readonly createdAt: CreationOptional<Date>;
   declare readonly updatedAt: CreationOptional<Date>;
   declare user?: NonAttribute<User>;
