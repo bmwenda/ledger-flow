@@ -6,7 +6,7 @@ import { BadRequestError } from "../errors/domain-errors.ts";
 const transactionParams = z.object({
   toAccountId: z.uuidv4(),
   fromAccountId: z.uuidv4(),
-  amount: z.number()
+  amount: z.union([z.number(), z.string()])
 })
 
 export async function createTransaction(req: Request, res: Response, next: NextFunction): Promise<void> {

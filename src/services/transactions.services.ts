@@ -1,7 +1,10 @@
-import { Transaction } from "../models/Transaction.ts";
-import type { InferCreationAttributes } from "sequelize";
+import { Decimal } from "decimal.js";
 import { Op } from "sequelize";
-import { TransactionNotFoundError } from "../errors/domain-errors.ts";
+import { sequelize } from "../db.ts";
+import type { InferCreationAttributes } from "sequelize";
+import { Account } from "../models/Account.ts";
+import { Transaction } from "../models/Transaction.ts";
+import { AccountNotFoundError, InvalidTransferError, TransactionNotFoundError } from "../errors/domain-errors.ts";
 import { assertTransactionParams } from "../validators/transactions.validator.ts";
 
 export type CreateTransactionInput = Pick<
@@ -31,9 +34,49 @@ export async function getTransactionsByAccountId(id: string): Promise<Transactio
 }
 
 export async function createTransactionToDb(transaction: CreateTransactionInput): Promise<Transaction> {
-  // TODO: Error checks: 2. toAccountId not exists, 3. fromAccountId not exists
   assertTransactionParams(transaction);
-  // TODO: implement locks and wrap in transaction
-  const result = await Transaction.create(transaction);
-  return result;
+
+  return await sequelize.transaction(async t => {
+    // Deterministic picking of IDs to prevent dead locks
+    const [firstId, secondId] = [transaction.fromAccountId, transaction.toAccountId].sort();
+
+    const firstAccount = await Account.findByPk(firstId, {
+      transaction: t,
+      lock: t.LOCK.UPDATE
+    }); // lock row with SELECT ... FOR UPDATE
+    const secondAccount = await Account.findByPk(secondId, {
+      transaction: t,
+      lock: t.LOCK.UPDATE
+    }); // lock row with SELECT ... FOR UPDATE
+
+    if(!firstAccount) throw new AccountNotFoundError(firstId);
+    if(!secondAccount) throw new AccountNotFoundError(secondId);
+
+    const fromAccount = transaction.fromAccountId == firstId ? firstAccount : secondAccount;
+    const toAccount = transaction.fromAccountId == firstId ? secondAccount : firstAccount;
+
+    if (new Decimal(fromAccount.balance).lt(transaction.amount)) { // balance in lock until after entire transaction
+      throw new InvalidTransferError("Insufficient balance");
+    }
+
+    const transferAmount = new Decimal(transaction.amount).toFixed(4);
+
+    const result = await Transaction.create(
+      { ...transaction, amount: transferAmount },
+      { transaction: t }
+    );
+    await Account.update(
+      {
+        balance: new Decimal(fromAccount.balance).minus(transferAmount).toFixed(4)
+      },
+      { where: { id: transaction.fromAccountId }, transaction: t },
+    );
+    await Account.update(
+      {
+        balance: new Decimal(toAccount.balance).plus(transferAmount).toFixed(4)
+      },
+      { where: { id: transaction.toAccountId }, transaction: t }
+    );
+    return result;
+  });
 }
