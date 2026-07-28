@@ -6,12 +6,12 @@ import { BadRequestError } from "../errors/domain-errors.ts";
 const transactionParams = z.object({
   toAccountId: z.uuidv4(),
   fromAccountId: z.uuidv4(),
-  amount: z.union([z.number(), z.string()])
+  amount: z.union([z.number(), z.string()]),
+  idempotencyKey: z.uuidv4()
 })
 
 export async function createTransaction(req: Request, res: Response, next: NextFunction): Promise<void> {
   const parsed = transactionParams.safeParse(req.body);
-  console.log(parsed)
 
   if (!parsed.success) {
     throw new BadRequestError("Invalid body format");

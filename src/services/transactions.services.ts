@@ -9,7 +9,7 @@ import { assertTransactionParams } from "../validators/transactions.validator.ts
 
 export type CreateTransactionInput = Pick<
   InferCreationAttributes<Transaction>,
-  "fromAccountId" | "toAccountId" | "amount"
+  "fromAccountId" | "toAccountId" | "amount" | "idempotencyKey"
 >;
 
 export async function getTransactionById(id: string): Promise<Transaction> {
@@ -35,6 +35,10 @@ export async function getTransactionsByAccountId(id: string): Promise<Transactio
 
 export async function createTransactionToDb(transaction: CreateTransactionInput): Promise<Transaction> {
   assertTransactionParams(transaction);
+
+  // Check if replay
+  const existing = await Transaction.findOne({ where: { idempotencyKey: transaction.idempotencyKey } });
+  if (existing) return existing;
 
   return await sequelize.transaction(async t => {
     // Deterministic picking of IDs to prevent dead locks

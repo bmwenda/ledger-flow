@@ -17,6 +17,7 @@ export class Transaction extends Model<InferAttributes<Transaction, { omit:  "cr
   declare amount: string; // pg-node returns decimal as string
   declare fromAccountId: string;
   declare toAccountId: string;
+  declare idempotencyKey: string;
   declare status: CreationOptional<TransactionStatus>;
   declare readonly createdAt: CreationOptional<Date>;
   declare readonly updatedAt: CreationOptional<Date>;
@@ -49,6 +50,11 @@ export function initTransaction(sequelize: Sequelize): void {
       references: { model: "accounts", key: "id" },
       onDelete: "RESTRICT",
       onUpdate: "CASCADE"
+    },
+    idempotencyKey: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      unique: true
     },
     status: {
       type: DataTypes.ENUM(...TRANSACTION_STATUSES),

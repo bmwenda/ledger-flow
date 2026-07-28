@@ -72,6 +72,7 @@ module.exports = {
         amount: parseFloat((Math.random() * 150 + 1).toFixed(4)),
         from_account_id: accountIds[fromIdx],
         to_account_id: accountIds[toIdx],
+        idempotency_key: uuidv4(),
         status: statuses[Math.floor(Math.random() * statuses.length)],
         created_at: now,
         updated_at: now
