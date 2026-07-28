@@ -56,5 +56,13 @@ export function initTransaction(sequelize: Sequelize): void {
       defaultValue: "pending"
     }
   },
-  { sequelize, underscored: true });
+  {
+    sequelize,
+    underscored: true,
+    indexes: [
+      { fields: ["from_account_id"] },
+      { fields: ["to_account_id"] },
+      { fields: ["created_at"] }
+    ]
+  });
 }

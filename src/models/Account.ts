@@ -48,5 +48,11 @@ export function initAccount(sequelize: Sequelize): void {
       validate: { isNumeric: true, notEmpty: true }
     }
   },
-  { sequelize, underscored: true });
+  {
+    sequelize,
+    underscored: true,
+    indexes: [
+      { fields: ["balance"] }
+    ]
+  });
 }
