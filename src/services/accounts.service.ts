@@ -1,11 +1,5 @@
 import { Account } from "../models/Account.ts";
-
-export class AccountNotFoundError extends Error {
-  constructor(id: string) {
-    super(`Account not found: ${id}`);
-    this.name = "AccountNotFoundError";
-  }
-}
+import { AccountNotFoundError } from "../errors/domain-errors.ts";
 
 export async function getAccountById(id: string): Promise<Account> {
   const account = await Account.findByPk(id);

@@ -1,12 +1,13 @@
 import { Transaction } from "../models/Transaction.ts";
+import type { InferCreationAttributes } from "sequelize";
 import { Op } from "sequelize";
+import { TransactionNotFoundError } from "../errors/domain-errors.ts";
+import { assertTransactionParams } from "../validators/transactions.validator.ts";
 
-class TransactionNotFoundError extends Error {
-  constructor(id: string) {
-    super(`Transaction not found: ${id}`);
-    this.name = "TransactionNotFoundError";
-  }
-}
+export type CreateTransactionInput = Pick<
+  InferCreationAttributes<Transaction>,
+  "fromAccountId" | "toAccountId" | "amount"
+>;
 
 export async function getTransactionById(id: string): Promise<Transaction> {
   const transaction = await Transaction.findByPk(id);
@@ -29,3 +30,10 @@ export async function getTransactionsByAccountId(id: string): Promise<Transactio
   return transactions;
 }
 
+export async function createTransactionToDb(transaction: CreateTransactionInput): Promise<Transaction> {
+  // TODO: Error checks: 2. toAccountId not exists, 3. fromAccountId not exists
+  assertTransactionParams(transaction);
+  // TODO: implement locks and wrap in transaction
+  const result = await Transaction.create(transaction);
+  return result;
+}

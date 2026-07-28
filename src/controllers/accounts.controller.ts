@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { type NextFunction, type Request, type Response } from "express";
-import { AccountNotFoundError, getAccountById } from "../services/accounts.service.ts";
+import { getAccountById } from "../services/accounts.service.ts";
 import { getTransactionsByAccountId } from "../services/transactions.services.ts";
+import { BadRequestError } from "../errors/domain-errors.ts";
 
 const accountParamsSchema = z.object({
   id: z.uuidv4()
@@ -14,8 +15,7 @@ const transactionParamsSchema = z.object({
 export async function getAccount(req: Request, res: Response, next: NextFunction): Promise<void> {
   const parsedParams = accountParamsSchema.safeParse(req.params);
   if (!parsedParams.success) {
-    res.status(400).json({ error: "Invalid account id" });
-    return;
+    throw new BadRequestError("Invalid Id format");
   }
 
   try {
@@ -23,10 +23,6 @@ export async function getAccount(req: Request, res: Response, next: NextFunction
 
     res.json(account);
   } catch(err) {
-    if (err instanceof AccountNotFoundError) {
-      res.status(404).json({ error: err.message });
-      return;
-    }
     next(err);
   };
 }
@@ -34,8 +30,7 @@ export async function getAccount(req: Request, res: Response, next: NextFunction
 export async function getTransactions(req: Request, res: Response, next: NextFunction): Promise<void>  {
   const parsedParams = transactionParamsSchema.safeParse(req.params);
   if (!parsedParams.success) {
-    res.status(400).json({ error: "Invalid transaction id" });
-    return;
+    throw new BadRequestError("Invalid id format");
   }
 
   try {
